@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"os"
 	"strings"
-	"github.com/faiface/beep"
 )
 
 const (
@@ -67,6 +66,22 @@ func main() {
 		return
 	}
 
+	luiWinScreen, err := newPlayer(renderer, "sprites/lui_win.bmp", 0, 0)
+	if err != nil {
+		fmt.Println("creating player bg:", err)
+		return
+	}
+	mioWinScreen, err := newPlayer(renderer, "sprites/mio_win.bmp", 0, 0)
+	if err != nil {
+		fmt.Println("creating player bg:", err)
+		return
+	}
+	drawScreen, err := newPlayer(renderer, "sprites/draw.bmp", 0, 0)
+	if err != nil {
+		fmt.Println("creating player bg:", err)
+		return
+	}
+
 	var enemyPositions [enemyCount]player
 	for i := 0; i < enemyCount; i++ {
 		temp, err := newPlayer(renderer, "sprites/ok.bmp", 200, 200)
@@ -115,20 +130,9 @@ func main() {
 	var luiScore int
 	var mioScore int
 
-	popfile, err := os.Open("sounds/pop.mp3")
-	if err != nil {
-		log.Fatal(err)
-	}
-	streamer, format, err := mp3.Decode(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer streamer.Close()
-	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
-
 	laddr, err := net.ResolveUDPAddr("udp", args[1] + ":" + args[2])
-	// argPort, _ := strconv.Atoi(args[2])
-	raddr := net.UDPAddr{IP: net.ParseIP(args[3]), Port: 22068}
+	argPort, _ := strconv.Atoi(args[4])
+	raddr := net.UDPAddr{IP: net.ParseIP(args[3]), Port: argPort}
 	conn, err := net.DialUDP("udp", laddr, &raddr)
 	if err != nil {
         fmt.Printf("Some error %v", err)
@@ -168,14 +172,11 @@ func main() {
 				if newv == 0 && isEnemyDead[i] == 1 {
 					// pop 
 					fmt.Println("collision !")
-					speaker.Play(streamer)
 				}
 				isEnemyDead[i] = newv 
 			}
 			luiScore, _ = strconv.Atoi(strings.Split(msg, "|")[1])
 			mioScore, _ = strconv.Atoi(strings.Split(msg, "|")[2])
-			// fmt.Print(strings.Split(msg, "|")[1])
-			// fmt.Println(strings.Split(msg, "|")[2])
 		default:
 			// fmt.Println("no message received")
 		}
@@ -191,31 +192,51 @@ func main() {
 		renderer.Clear()
 		plrbg.drawbg(renderer)
 
-		for i := 0; i < enemyCount; i++ {
-			if isEnemyDead[i] == 1 {
-				enemyPositions[i].draw(renderer)
-			}
-		}
-
 		plrLui.draw(renderer)
 		plrMio.draw(renderer)
 
-		M.draw(renderer)
-		L.draw(renderer)
-		// fmt.Print(luiScore)
-		// fmt.Println(mioScore)
-		luiScoreImages[luiScore].draw(renderer)
-		mioScoreImages[mioScore].draw(renderer)
-
-		if args[0] == "mio" {
-			plrMio.update(conn)
-		} else if args[0] == "lui" {
-			plrLui.update(conn)
+		if luiScore + mioScore == 6 {
+			if luiScore > mioScore {
+				luiWinScreen.drawbg(renderer)
+			} else if mioScore > luiScore {
+				mioWinScreen.drawbg(renderer)
+			} else {
+				// draw
+				drawScreen.drawbg(renderer)
+			}
+			if args[0] == "mio" {
+				plrMio.update(conn)
+			} else if args[0] == "lui" {
+				plrLui.update(conn)
+			}
+		} else {
+			for i := 0; i < enemyCount; i++ {
+				if isEnemyDead[i] == 1 {
+					enemyPositions[i].draw(renderer)
+				}
+			}
+	
+			
+	
+			M.draw(renderer)
+			L.draw(renderer)
+			// fmt.Print(luiScore)
+			// fmt.Println(mioScore)
+			luiScoreImages[luiScore].draw(renderer)
+			mioScoreImages[mioScore].draw(renderer)
+	
+			if args[0] == "mio" {
+				plrMio.update(conn)
+			} else if args[0] == "lui" {
+				plrLui.update(conn)
+			}
+			
+			// print(luiScore)
+			// print(mioScore)
 		}
-		
-		// print(luiScore)
-		// print(mioScore)
 		renderer.Present()
+
+		
 	}
 	conn.Close()
 }

@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"os"
 	"strings"
+	"github.com/faiface/beep"
 )
 
 const (
@@ -50,12 +51,12 @@ func main() {
 	}
 	defer renderer.Destroy()
 
-	plrLui, err := newPlayer(renderer, "sprites/gide_lui.bmp", 200, 200)
+	plrLui, err := newPlayer(renderer, "sprites/gide_lui.bmp", 100, 500)
 	if err != nil {
 		fmt.Println("creating player lui:", err)
 		return
 	}
-	plrMio, err := newPlayer(renderer, "sprites/gide_mio.bmp", 201, 202)
+	plrMio, err := newPlayer(renderer, "sprites/gide_mio.bmp", 700, 200)
 	if err != nil {
 		fmt.Println("creating player lui2:", err)
 		return
@@ -90,6 +91,17 @@ func main() {
 		luiScoreImages[i] = temp
 	}
 
+	M, err := newPlayer(renderer, "sprites/M.bmp", 300, 100)
+	if err != nil {
+		fmt.Println("creating player bg:", err)
+		return
+	}
+	L, err := newPlayer(renderer, "sprites/L.bmp", 200, 100)
+	if err != nil {
+		fmt.Println("creating player bg:", err)
+		return
+	}
+
 	var mioScoreImages [enemyCount+1]player
 	for i := 0; i <= enemyCount; i++ {
 		temp, err := newPlayer(renderer, "sprites/" + strconv.Itoa(i) + ".bmp", 300, 200)
@@ -102,6 +114,17 @@ func main() {
 
 	var luiScore int
 	var mioScore int
+
+	popfile, err := os.Open("sounds/pop.mp3")
+	if err != nil {
+		log.Fatal(err)
+	}
+	streamer, format, err := mp3.Decode(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer streamer.Close()
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 
 	laddr, err := net.ResolveUDPAddr("udp", args[1] + ":" + args[2])
 	// argPort, _ := strconv.Atoi(args[2])
@@ -122,7 +145,7 @@ func main() {
 	for {
 		select {
 		case msg := <-c:
-			fmt.Println("received message", msg)
+			// fmt.Println("received message", msg)
 			rmsg := strings.Split(msg, ",")
 			// fmt.Println(rmsg[0])
 			// floatNum, errF := strconv.ParseFloat(rmsg[0], 64)
@@ -135,16 +158,24 @@ func main() {
 			plrMio.x, _ = strconv.ParseFloat(rmsg[2], 64)
 			plrMio.y, _ = strconv.ParseFloat(rmsg[3], 64)
 			for i := 0; i < enemyCount; i++ {
-				enemyPositions[i].x, _ = strconv.ParseFloat(rmsg[4+i], 64)
-				enemyPositions[i].y, _ = strconv.ParseFloat(rmsg[5+i], 64)
+				newx, _ := strconv.ParseFloat(rmsg[4+i], 64)
+				enemyPositions[i].x  = newx
+				newy, _ := strconv.ParseFloat(rmsg[5+i], 64)
+				enemyPositions[i].y = newy
 			}
 			for i := 0; i < enemyCount; i++ {
-				isEnemyDead[i], _ = strconv.Atoi(rmsg[16+i])
+				newv, _ := strconv.Atoi(rmsg[16+i])
+				if newv == 0 && isEnemyDead[i] == 1 {
+					// pop 
+					fmt.Println("collision !")
+					speaker.Play(streamer)
+				}
+				isEnemyDead[i] = newv 
 			}
 			luiScore, _ = strconv.Atoi(strings.Split(msg, "|")[1])
 			mioScore, _ = strconv.Atoi(strings.Split(msg, "|")[2])
-			fmt.Print(strings.Split(msg, "|")[1])
-			fmt.Println(strings.Split(msg, "|")[2])
+			// fmt.Print(strings.Split(msg, "|")[1])
+			// fmt.Println(strings.Split(msg, "|")[2])
 		default:
 			// fmt.Println("no message received")
 		}
@@ -169,8 +200,10 @@ func main() {
 		plrLui.draw(renderer)
 		plrMio.draw(renderer)
 
-		fmt.Print(luiScore)
-		fmt.Println(mioScore)
+		M.draw(renderer)
+		L.draw(renderer)
+		// fmt.Print(luiScore)
+		// fmt.Println(mioScore)
 		luiScoreImages[luiScore].draw(renderer)
 		mioScoreImages[mioScore].draw(renderer)
 

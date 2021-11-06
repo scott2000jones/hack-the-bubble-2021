@@ -51,8 +51,8 @@ func main() {
 	// var luiAddr *net.UDPAddr
 	// var mioAddr *net.UDPAddr
 
-	luiPos := SpritePos{x: 200, y: 200}
-	mioPos := SpritePos{x: 300, y: 200}
+	luiPos := SpritePos{x: 100, y: 500}
+	mioPos := SpritePos{x: 700, y: 200}
 
 	luiScore := 0
 	mioScore := 0

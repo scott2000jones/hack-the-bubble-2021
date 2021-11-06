@@ -59,22 +59,16 @@ func main() {
 		fmt.Println("creating player lui2:", err)
 		return
 	}
-	plrbg, err := newPlayer(renderer, "sprites/bg.bmp", 0, 0)
-	if err != nil {
-		fmt.Println("creating player bg:", err)
-		return
-	}
-
-	plrTestBin, err := newPlayer(renderer, "sprites/amongus.bmp", 200, 200)
-	if err != nil {
-		fmt.Println("creating player bg:", err)
-		return
-	}
+	// plrMio, err := newPlayer(renderer, "sprites/gide_mio.bmp", 200, 200)
+	// if err != nil {
+	// 	fmt.Println("creating player mio:", err)
+	// 	return
+	// }
 
 
-	laddr, err := net.ResolveUDPAddr("udp", args[1] + ":" + args[2])
+	laddr, err := net.ResolveUDPAddr("udp",  "138.251.29.191" + ":" + args[2])
 	// argPort, _ := strconv.Atoi(args[2])
-	raddr := net.UDPAddr{IP: net.ParseIP(args[3]), Port: 22068}
+	raddr := net.UDPAddr{IP: net.ParseIP("138.251.29.189"), Port: 22068}
 	conn, err := net.DialUDP("udp", laddr, &raddr)
 	if err != nil {
         fmt.Printf("Some error %v", err)
@@ -124,10 +118,6 @@ func main() {
 
 		renderer.SetDrawColor(255, 255, 255, 255)
 		renderer.Clear()
-		plrbg.drawbg(renderer)
-
-
-		plrTestBin.draw(renderer)
 
 		plrLui.draw(renderer)
 		// plrLui2.draw(renderer)

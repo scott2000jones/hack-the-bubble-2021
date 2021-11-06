@@ -43,16 +43,6 @@ func (p *player) draw(renderer *sdl.Renderer) {
 		&sdl.Rect{X: int32(x), Y: int32(y), W: playerWidth, H: playerHeight})
 }
 
-func (p *player) drawbg(renderer *sdl.Renderer) {
-
-	// x := p.x - 1000/2.0
-	// y := p.y - 600/2.0
-
-	renderer.Copy(p.tex,
-		nil,
-		&sdl.Rect{X: 0, Y: 0, W: 1000, H: 600})
-}
-
 func (p *player) update(conn net.Conn) {
 	keys := sdl.GetKeyboardState()
 

@@ -3,7 +3,7 @@ package main
 import (
     "fmt" 
     "net"  
-	"strconv"
+	// "strconv"
 	"math/rand"
 	"time"
 	"math"
@@ -21,7 +21,7 @@ type SpritePos struct {
 	x, y int;
 }
 
-func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, luiPos SpritePos, mioPos SpritePos, enemyPositions [enemyCount]SpritePos, isEnemyDead [enemyCount]int) {
+func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, luiPos SpritePos, mioPos SpritePos, enemyPositions [enemyCount]SpritePos, isEnemyDead [enemyCount]int, luiScore int, mioScore int) {
 	msg := fmt.Sprintf("%d,%d,%d,%d", luiPos.x, luiPos.y, mioPos.x, mioPos.y)
 	for i := 0; i < enemyCount; i++  {
 		msg = fmt.Sprintf("%s,%d,%d", msg, enemyPositions[i].x, enemyPositions[i].y)
@@ -29,7 +29,9 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, luiPos SpritePos, mioPos
 	for i := 0; i < enemyCount; i++  {
 		msg = fmt.Sprintf("%s,%d", msg, isEnemyDead[i])
 	}
-	msg = fmt.Sprintf("%s,||", msg)
+	msg = fmt.Sprintf("%s|%d|%d|", msg, luiScore, mioScore)
+	msg = fmt.Sprintf("%s::::::", msg)
+	fmt.Println(msg)
     _,err := conn.WriteToUDP([]byte(msg), addr)
     if err != nil {
         fmt.Printf("Couldn't send response %v", err)
@@ -40,6 +42,7 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, luiPos SpritePos, mioPos
 func main() {
 	// port 22069 is player 1
 	// port 22420 is player 2
+	var startTime int64
 
 	var luiIP string
 	var mioIP string
@@ -51,6 +54,9 @@ func main() {
 	luiPos := SpritePos{x: 200, y: 200}
 	mioPos := SpritePos{x: 300, y: 200}
 
+	luiScore := 0
+	mioScore := 0
+
 	var enemyPositions [enemyCount]SpritePos
 	for i := 0; i < enemyCount; i++ {
 		enemyPositions[i] = SpritePos{x: 400, y: 300}
@@ -61,7 +67,7 @@ func main() {
 	}
 	
 
-	fmt.Println(strconv.Itoa(luiPos.x) + "  " + strconv.Itoa(mioPos.x))
+	// fmt.Println(strconv.Itoa(luiPos.x) + "  " + strconv.Itoa(mioPos.x))
 
     p := make([]byte, 2048)
     addr := net.UDPAddr{
@@ -80,11 +86,11 @@ func main() {
             continue
         }
         // fmt.Printf("Read a message from %v %s \n", remoteaddr, p)
-		fmt.Println("read: " + string(p) + "----------------------------")
-		fmt.Println(string(p)[:4])
+		// fmt.Println("read: " + string(p) + "----------------------------")
+		// fmt.Println(string(p)[:4])
 		if string(p)[:2] == "up" {
 			// move up
-			fmt.Println("up")
+			// fmt.Println("up")
 			// fmt.Printf("%s\n", (remoteaddr.IP))
 			// fmt.Println(strconv.Itoa(remoteaddr.Port))
 			// fmt.Println(remoteaddr.Zone)
@@ -92,62 +98,69 @@ func main() {
 			for i := 0; i < enemyCount; i++ {
 				updateEnemyPos(&enemyPositions[i])
 			}
-			checkCollisions(enemyPositions, &isEnemyDead, luiPos, mioPos)
+			// checkCollisions(enemyPositions, &isEnemyDead, luiPos, mioPos)
 		} else if string(p)[:4] == "down" {
 			// move down
-			fmt.Println("down")
+			// fmt.Println("down")
 			updatePlayerPos(0, -1, remoteaddr, &luiPos, &mioPos, luiIP, luiPort)
 			for i := 0; i < enemyCount; i++ {
 				updateEnemyPos(&enemyPositions[i])
 			}
-			checkCollisions(enemyPositions, &isEnemyDead, luiPos, mioPos)
+			// checkCollisions(enemyPositions, &isEnemyDead, luiPos, mioPos)
 		} else if string(p)[:4] == "left" {
 			// move left
-			fmt.Println("left")
+			// fmt.Println("left")
 			updatePlayerPos(-1, 0, remoteaddr, &luiPos, &mioPos, luiIP, luiPort)
 			for i := 0; i < enemyCount; i++ {
 				updateEnemyPos(&enemyPositions[i])
 			}
-			checkCollisions(enemyPositions, &isEnemyDead, luiPos, mioPos)
+			// checkCollisions(enemyPositions, &isEnemyDead, luiPos, mioPos)
 		} else if string(p)[:5] == "right" {
 			// move right
-			fmt.Println("right")
+			// fmt.Println("right")
 			updatePlayerPos(1, 0, remoteaddr, &luiPos, &mioPos, luiIP, luiPort)
 			for i := 0; i < enemyCount; i++ {
 				updateEnemyPos(&enemyPositions[i])
 			}
-			checkCollisions(enemyPositions, &isEnemyDead, luiPos, mioPos)
 		} else if string(p)[:4] == "init" {
 			if string(p)[5:8] == "lui" {
 				luiIP = fmt.Sprintf("%s", remoteaddr.IP)
 				luiPort = remoteaddr.Port
+				startTime = time.Now().Unix()
 			} else if string(p)[5:8] == "mio" {
 				mioIP = fmt.Sprintf("%s", remoteaddr.IP)
 				mioPort = remoteaddr.Port
+				startTime = time.Now().Unix()
 			}
-			fmt.Println(luiIP)
-			fmt.Println(mioIP)
-			fmt.Println(mioPort)
+			// fmt.Println(luiIP)
+			// fmt.Println(mioIP)
+			// fmt.Println(mioPort)
 		}
 		// fmt.Println(strconv.Itoa(luiPos.x) + "  " + strconv.Itoa(luiPos.y) + " || " + strconv.Itoa(mioPos.x) + "  " + strconv.Itoa(mioPos.y))
 		
-		fmt.Println(strconv.Itoa(enemyPositions[0].x) + "  " + strconv.Itoa(enemyPositions[0].y) + " || " + strconv.Itoa(enemyPositions[1].x) + "  " + strconv.Itoa(enemyPositions[1].y))
+		// fmt.Println(strconv.Itoa(enemyPositions[0].x) + "  " + strconv.Itoa(enemyPositions[0].y) + " || " + strconv.Itoa(enemyPositions[1].x) + "  " + strconv.Itoa(enemyPositions[1].y))
+		luiScore, mioScore = checkCollisions(enemyPositions, &isEnemyDead, luiPos, mioPos, startTime, luiScore, mioScore)
 
 		if luiIP != "" {
 			raddr := net.UDPAddr{IP: net.ParseIP(luiIP), Port: luiPort}
-			go sendResponse(ser, &raddr, luiPos, mioPos, enemyPositions, isEnemyDead)
+			go sendResponse(ser, &raddr, luiPos, mioPos, enemyPositions, isEnemyDead, luiScore, mioScore)
 		}
 
 		if mioIP != "" {
 			raddr := net.UDPAddr{IP: net.ParseIP(mioIP), Port: mioPort}
 			// fmt.Println((&raddr).Port)
-			go sendResponse(ser, &raddr, luiPos, mioPos, enemyPositions, isEnemyDead)
+			go sendResponse(ser, &raddr, luiPos, mioPos, enemyPositions, isEnemyDead, luiScore, mioScore)
 		}
+		// print(luiScore)
+		// print(mioScore)
 
     }
 }
 
-func checkCollisions(enemyPositions [enemyCount]SpritePos, isEnemyDead *[enemyCount]int, luiPos SpritePos, mioPos SpritePos) {
+func checkCollisions(enemyPositions [enemyCount]SpritePos, isEnemyDead *[enemyCount]int, luiPos SpritePos, mioPos SpritePos, startTime int64, luiScore int, mioScore int) (newLui int, newMio int) {
+	if time.Now().Unix() < startTime + 10 {
+		return
+	}
 	for i := 0; i < enemyCount; i++ {
 		if isEnemyDead[i] == 1 {
 			// if (luiPos.x > enemyPositions[i].x) && (luiPos.x < enemyPositions[i].x + playerWidth) && (luiPos.y > enemyPositions[i].y) && (luiPos.y < enemyPositions[i].y + playerHeight)  {
@@ -160,13 +173,32 @@ func checkCollisions(enemyPositions [enemyCount]SpritePos, isEnemyDead *[enemyCo
 			// }
 
 
-			luiDiffx = math.Abs(luiPos.x - luiPos[i].x)
-			luiDiffy = math.Abs(luiPos.y - luiPos[i].y)
-			mioDiffx = math.Abs(mioPos.x - enemyPositions[i].x)
-			mioDiffy = math.Abs(mioPos.y - enemyPositions[i].y)
+			luiDiffx := math.Abs(float64(luiPos.x - enemyPositions[i].x))
+			luiDiffy := math.Abs(float64(luiPos.y - enemyPositions[i].y))
+			if (luiDiffx < playerWidth/2 && luiDiffy < playerHeight/2) {
+				fmt.Println("COLLISION")
+				isEnemyDead[i] = 0
+				luiScore += 1
+			}
+
+			mioDiffx := math.Abs(float64(mioPos.x - enemyPositions[i].x))
+			mioDiffy := math.Abs(float64(mioPos.y - enemyPositions[i].y))
+				//(luiDiffx < playerWidth && luiDiffy < playerHeight) || 
+			if (mioDiffx < playerWidth/2 && mioDiffy < playerHeight/2) {
+				fmt.Println("COLLISION")
+				isEnemyDead[i] = 0
+				mioScore += 1
+			}
 			
 		}
 	}
+	return luiScore, mioScore
+
+	// fmt.Println(luiPos.x)
+	// fmt.Println(luiPos.y)
+	// fmt.Println(mioPos.x)
+	// fmt.Println(mioPos.y)
+
 }
 
 func updateEnemyPos(e *SpritePos) {
@@ -176,7 +208,7 @@ func updateEnemyPos(e *SpritePos) {
 	direction := r1.Intn(4)
 	coinFlip := r1.Intn(2)
 	coinFlip = coinFlip * 3
-	fmt.Println(direction)
+	// fmt.Println(direction)
 	// coinFlip := 1
 	if direction == 0 {
 		// up 

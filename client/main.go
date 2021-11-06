@@ -80,6 +80,29 @@ func main() {
 		isEnemyDead[i] = 1
 	}
 
+	var luiScoreImages [enemyCount+1]player
+	for i := 0; i <= enemyCount; i++ {
+		temp, err := newPlayer(renderer, "sprites/" + strconv.Itoa(i) + ".bmp", 200, 200)
+		if err != nil {
+			fmt.Println("creating player enemy:", err)
+			return
+		}
+		luiScoreImages[i] = temp
+	}
+
+	var mioScoreImages [enemyCount+1]player
+	for i := 0; i <= enemyCount; i++ {
+		temp, err := newPlayer(renderer, "sprites/" + strconv.Itoa(i) + ".bmp", 300, 200)
+		if err != nil {
+			fmt.Println("creating player enemy:", err)
+			return
+		}
+		mioScoreImages[i] = temp
+	}
+
+	var luiScore int
+	var mioScore int
+
 	laddr, err := net.ResolveUDPAddr("udp", args[1] + ":" + args[2])
 	// argPort, _ := strconv.Atoi(args[2])
 	raddr := net.UDPAddr{IP: net.ParseIP(args[3]), Port: 22068}
@@ -118,6 +141,10 @@ func main() {
 			for i := 0; i < enemyCount; i++ {
 				isEnemyDead[i], _ = strconv.Atoi(rmsg[16+i])
 			}
+			luiScore, _ = strconv.Atoi(strings.Split(msg, "|")[1])
+			mioScore, _ = strconv.Atoi(strings.Split(msg, "|")[2])
+			fmt.Print(strings.Split(msg, "|")[1])
+			fmt.Println(strings.Split(msg, "|")[2])
 		default:
 			// fmt.Println("no message received")
 		}
@@ -142,19 +169,19 @@ func main() {
 		plrLui.draw(renderer)
 		plrMio.draw(renderer)
 
-		// fmt.Println(plrLui.x) 
-		// fmt.Println(plrLui.y) 
-		// fmt.Println(plrMio.x)
-		// fmt.Println(plrMio.y)
+		fmt.Print(luiScore)
+		fmt.Println(mioScore)
+		luiScoreImages[luiScore].draw(renderer)
+		mioScoreImages[mioScore].draw(renderer)
 
 		if args[0] == "mio" {
 			plrMio.update(conn)
-			// plrLui2.update(conn)
 		} else if args[0] == "lui" {
 			plrLui.update(conn)
 		}
 		
-
+		// print(luiScore)
+		// print(mioScore)
 		renderer.Present()
 	}
 	conn.Close()

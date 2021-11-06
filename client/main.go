@@ -10,7 +10,7 @@ import (
 
 const (
 	screenWidth  = 1000
-	screenHeight = 800
+	screenHeight = 600
 )
 
 
@@ -49,8 +49,12 @@ func main() {
 	testcon, _ := net.Dial("udp", "127.0.0.1:22068")
 	
 	for {
-		msg := <- c
-		fmt.Println(msg)
+		select {
+		case msg := <-c:
+			fmt.Println("received message", msg)
+		default:
+			// fmt.Println("no message received")
+		}
 
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch event.(type) {
@@ -88,7 +92,8 @@ func UDPLoop(c chan<- string) {
 		fmt.Fprintf(conn, "Hi UDP Server, How are you doing?")
 		_, err = bufio.NewReader(conn).Read(p)
 		if err == nil {
-			fmt.Printf("%s\n", p)
+			// fmt.Printf("%s\n", p)
+			c <- string(p)
 		} else {
 			fmt.Printf("Some error %v\n", err)
 		}

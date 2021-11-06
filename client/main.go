@@ -14,6 +14,7 @@ import (
 const (
 	screenWidth  = 1000
 	screenHeight = 600
+	enemyCount = 6
 )
 
 type SpritePos struct {
@@ -65,12 +66,19 @@ func main() {
 		return
 	}
 
-	plrTestBin, err := newPlayer(renderer, "sprites/amongus.bmp", 200, 200)
-	if err != nil {
-		fmt.Println("creating player bg:", err)
-		return
+	var enemyPositions [enemyCount]player
+	for i := 0; i < enemyCount; i++ {
+		temp, err := newPlayer(renderer, "sprites/ok.bmp", 200, 200)
+		if err != nil {
+			fmt.Println("creating player enemy:", err)
+			return
+		}
+		enemyPositions[i] = temp
 	}
-
+	var isEnemyDead [enemyCount]int
+	for i := 0; i < enemyCount; i++ {
+		isEnemyDead[i] = 1
+	}
 
 	laddr, err := net.ResolveUDPAddr("udp", args[1] + ":" + args[2])
 	// argPort, _ := strconv.Atoi(args[2])
@@ -82,13 +90,6 @@ func main() {
     }
 	c := make(chan string)
 	go UDPLoop(c, conn)
-	// testcon, _ := net.Dial("udp", "127.0.0.1:22068")
-	// laddr, _ := net.ResolveUDPAddr("udp", "127.0.0.1:22069")
-	// raddr := net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 22068}
-	// testcon, _ := net.DialUDP("udp", laddr, &raddr)
-	// defer testcon.Close()
-
-	// fmt.Println(args[0])
 	if args[0] != "lui" {
 		SendUDP("init,mio", conn)
 	} else {
@@ -110,7 +111,13 @@ func main() {
 			plrLui.y, _ = strconv.ParseFloat(rmsg[1], 64)
 			plrMio.x, _ = strconv.ParseFloat(rmsg[2], 64)
 			plrMio.y, _ = strconv.ParseFloat(rmsg[3], 64)
-			fmt.Println(rmsg[3])
+			for i := 0; i < enemyCount; i++ {
+				enemyPositions[i].x, _ = strconv.ParseFloat(rmsg[4+i], 64)
+				enemyPositions[i].y, _ = strconv.ParseFloat(rmsg[5+i], 64)
+			}
+			for i := 0; i < enemyCount; i++ {
+				isEnemyDead[i], _ = strconv.Atoi(rmsg[16+i])
+			}
 		default:
 			// fmt.Println("no message received")
 		}
@@ -126,11 +133,13 @@ func main() {
 		renderer.Clear()
 		plrbg.drawbg(renderer)
 
-
-		plrTestBin.draw(renderer)
+		for i := 0; i < enemyCount; i++ {
+			if isEnemyDead[i] == 1 {
+				enemyPositions[i].draw(renderer)
+			}
+		}
 
 		plrLui.draw(renderer)
-		// plrLui2.draw(renderer)
 		plrMio.draw(renderer)
 
 		// fmt.Println(plrLui.x) 
@@ -154,12 +163,6 @@ func main() {
 
 func UDPLoop(c chan<- string, conn net.Conn) {
     p :=  make([]byte, 2048)
-    // conn, err := net.Dial("udp", "127.0.0.1:22068")
-    // if err != nil {
-    //     fmt.Printf("UDPLoop error %v", err)
-    //     return
-    // }
-	// defer conn.Close()
 	for {
 		// fmt.Fprintf(conn, "Hi UDP Server, How are you doing?")
 		_, err := bufio.NewReader(conn).Read(p)

@@ -38,7 +38,7 @@ func main() {
 	}
 	defer renderer.Destroy()
 
-	plr, err := newPlayer(renderer)
+	plr, err := newPlayer(renderer, "sprites/gide_lui.bmp")
 	if err != nil {
 		fmt.Println("creating player:", err)
 		return

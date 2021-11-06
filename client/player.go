@@ -9,8 +9,8 @@ type player struct {
 	tex *sdl.Texture
 }
 
-func newPlayer(renderer *sdl.Renderer) (p player, err error) {
-	img, err := sdl.LoadBMP("sprites/gide_lui.bmp")
+func newPlayer(renderer *sdl.Renderer, path string) (p player, err error) {
+	img, err := sdl.LoadBMP(path)
 	if err != nil {
 		return player{}, fmt.Errorf("loading player sprite: %v", err)
 	}
@@ -25,6 +25,6 @@ func newPlayer(renderer *sdl.Renderer) (p player, err error) {
 
 func (p *player) draw(renderer *sdl.Renderer) {
 	renderer.Copy(p.tex,
-		&sdl.Rect{X: 0, Y: 0, W: 105, H: 105},
-		&sdl.Rect{X: 40, Y: 20, W: 105, H: 105})
+		&sdl.Rect{X: 0, Y: 0, W: 100, H: 162},
+		&sdl.Rect{X: 40, Y: 20, W: 105, H: 120})
 }

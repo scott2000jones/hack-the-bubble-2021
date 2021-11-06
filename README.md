@@ -1,5 +1,5 @@
 # hack-the-bubble-2021
-Luigi's LABsion, made in 10 hours from scratch at Hack the Bubble 2021 using Go.
+Luigi's LABsion, a full graphical 2-player networked multiplayer game made in 9 hours solo and from scratch at Hack the Bubble 2021 using Go
 
 To run the server:
 cd server

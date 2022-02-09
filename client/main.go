@@ -4,7 +4,6 @@ import (
     "fmt"
     "net"
     "bufio"
-	// "time"
 	"github.com/veandco/go-sdl2/sdl"
 	"strconv"
 	"os"
@@ -149,14 +148,7 @@ func main() {
 	for {
 		select {
 		case msg := <-c:
-			// fmt.Println("received message", msg)
 			rmsg := strings.Split(msg, ",")
-			// fmt.Println(rmsg[0])
-			// floatNum, errF := strconv.ParseFloat(rmsg[0], 64)
-			// if errF != nil {
-			// 	fmt.Printf("Parse error %v\n", errF)
-			// }
-			// fmt.Println(floatNum)
 			plrLui.x, _ = strconv.ParseFloat(rmsg[0], 64)
 			plrLui.y, _ = strconv.ParseFloat(rmsg[1], 64)
 			plrMio.x, _ = strconv.ParseFloat(rmsg[2], 64)
@@ -178,7 +170,6 @@ func main() {
 			luiScore, _ = strconv.Atoi(strings.Split(msg, "|")[1])
 			mioScore, _ = strconv.Atoi(strings.Split(msg, "|")[2])
 		default:
-			// fmt.Println("no message received")
 		}
 
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
@@ -220,8 +211,6 @@ func main() {
 	
 			M.draw(renderer)
 			L.draw(renderer)
-			// fmt.Print(luiScore)
-			// fmt.Println(mioScore)
 			luiScoreImages[luiScore].draw(renderer)
 			mioScoreImages[mioScore].draw(renderer)
 	
@@ -231,8 +220,6 @@ func main() {
 				plrLui.update(conn)
 			}
 			
-			// print(luiScore)
-			// print(mioScore)
 		}
 		renderer.Present()
 
@@ -245,15 +232,12 @@ func main() {
 func UDPLoop(c chan<- string, conn net.Conn) {
     p :=  make([]byte, 2048)
 	for {
-		// fmt.Fprintf(conn, "Hi UDP Server, How are you doing?")
 		_, err := bufio.NewReader(conn).Read(p)
 		if err == nil {
-			// fmt.Printf("%s\n", p)
 			c <- string(p)
 		} else {
 			fmt.Printf("Some error %v\n", err)
 		}
-		// time.Sleep(time.Second * 1)
 	}
 }
 

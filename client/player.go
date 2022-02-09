@@ -44,10 +44,6 @@ func (p *player) draw(renderer *sdl.Renderer) {
 }
 
 func (p *player) drawbg(renderer *sdl.Renderer) {
-
-	// x := p.x - 1000/2.0
-	// y := p.y - 600/2.0
-
 	renderer.Copy(p.tex,
 		nil,
 		&sdl.Rect{X: 0, Y: 0, W: 1000, H: 600})
